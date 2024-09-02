@@ -7,6 +7,7 @@ import server from './server';
 
 // **** Run **** //
 
+
 const SERVER_START_MSG = ('Express server started on port: ' + 
   EnvVars.Port.toString());
 

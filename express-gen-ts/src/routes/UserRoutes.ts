@@ -15,6 +15,12 @@ async function getAll(_: IReq, res: IRes) {
   return res.status(HttpStatusCodes.OK).json({ users });
 }
 
+async function login(req: IReq<{user: IUser}>, res: IRes) {
+  const { user } = req.body;
+  const token = await UserService.login(user);
+  return res.status(HttpStatusCodes.OK).json({ token });
+}
+
 /**
  * Add one user.
  */
@@ -48,6 +54,7 @@ async function delete_(req: IReq, res: IRes) {
 export default {
   getAll,
   add,
+  login,
   update,
   delete: delete_,
 } as const;

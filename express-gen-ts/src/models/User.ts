@@ -1,4 +1,5 @@
 import moment from 'moment';
+import { ISanguche } from './Sanguche';
 
 
 // **** Variables **** //
@@ -11,9 +12,10 @@ const INVALID_CONSTRUCTOR_PARAM = 'nameOrObj arg must a string or an object ' +
 
 export interface IUser {
   id: number;
-  name: string;
+  username: string;
   email: string;
-  created: Date;
+  password: string;
+  creaciones: Array<ISanguche>;
 }
 
 
@@ -23,16 +25,18 @@ export interface IUser {
  * Create new User.
  */
 function new_(
-  name?: string,
+  username?: string,
   email?: string,
-  created?: Date,
+  password?: string,
+  creaciones?: Array<ISanguche>,
   id?: number, // id last cause usually set by db
 ): IUser {
   return {
     id: (id ?? -1),
-    name: (name ?? ''),
+    username: (username ?? ''),
     email: (email ?? ''),
-    created: (created ? new Date(created) : new Date()),
+    password: (password ?? ''),
+    creaciones: (creaciones ? creaciones : []),
   };
 }
 
@@ -44,7 +48,7 @@ function from(param: object): IUser {
     throw new Error(INVALID_CONSTRUCTOR_PARAM);
   }
   const p = param as IUser;
-  return new_(p.name, p.email, p.created, p.id);
+  return new_(p.username, p.email, p.password,p.creaciones, p.id);
 }
 
 /**
@@ -56,8 +60,8 @@ function isUser(arg: unknown): boolean {
     typeof arg === 'object' &&
     'id' in arg && typeof arg.id === 'number' && 
     'email' in arg && typeof arg.email === 'string' && 
-    'name' in arg && typeof arg.name === 'string' &&
-    'created' in arg && moment(arg.created as string | Date).isValid()
+    'username' in arg && typeof arg.username === 'string' &&
+    'password' in arg && typeof arg.password === 'string'
   );
 }
 

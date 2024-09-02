@@ -7,9 +7,17 @@ export default {
   Base: '/api',
   Users: {
     Base: '/users',
-    Get: '/all',
-    Add: '/add',
-    Update: '/update',
-    Delete: '/delete/:id',
+    Get: '/',
+    Add: '/',
+    Login: '/login',
+    Update: '/',
+    Delete: '/:id',
+  },
+  Sanguches: {
+    Base: '/sanguches',
+    Get: '/',
+    Add: '/',
+    Update: '/',
+    Delete: '/:id',
   },
 } as const;

@@ -1,13 +1,13 @@
 import RouteError from '@src/common/RouteError';
 import HttpStatusCodes from '@src/common/HttpStatusCodes';
 
-import UserRepo from '@src/repos/UserRepo';
-import { IUser } from '@src/models/User';
+import SangucheRepo from '@src/repos/SangucheRepo';
+import { ISanguche } from '@src/models/Sanguche';
 
 
 // **** Variables **** //
 
-export const USER_NOT_FOUND_ERR = 'User not found';
+export const SANGUCHE_NOT_FOUND_ERR = 'Sanguche not found';
 
 
 // **** Functions **** //
@@ -15,49 +15,45 @@ export const USER_NOT_FOUND_ERR = 'User not found';
 /**
  * Get all users.
  */
-function getAll(): Promise<IUser[]> {
-  return UserRepo.getAll();
+function getAll(): Promise<ISanguche[]> {
+  return SangucheRepo.getAll();
 }
 
 /**
  * Add one user.
  */
-function addOne(user: IUser): Promise<void> {
-  return UserRepo.add(user);
-}
-
-function login(user: IUser): Promise<String> {
-  return UserRepo.login(user);
+function addOne(user: ISanguche): Promise<void> {
+  return SangucheRepo.add(user);
 }
 
 /**
  * Update one user.
  */
-async function updateOne(user: IUser): Promise<void> {
-  const persists = await UserRepo.persists(user.id);
+async function updateOne(user: ISanguche): Promise<void> {
+  const persists = await SangucheRepo.persists(user.id);
   if (!persists) {
     throw new RouteError(
       HttpStatusCodes.NOT_FOUND,
-      USER_NOT_FOUND_ERR,
+      SANGUCHE_NOT_FOUND_ERR,
     );
   }
   // Return user
-  return UserRepo.update(user);
+  return SangucheRepo.update(user);
 }
 
 /**
  * Delete a user by their id.
  */
 async function _delete(id: number): Promise<void> {
-  const persists = await UserRepo.persists(id);
+  const persists = await SangucheRepo.persists(id);
   if (!persists) {
     throw new RouteError(
       HttpStatusCodes.NOT_FOUND,
-      USER_NOT_FOUND_ERR,
+      SANGUCHE_NOT_FOUND_ERR,
     );
   }
   // Delete user
-  return UserRepo.delete(id);
+  return SangucheRepo.delete(id);
 }
 
 
@@ -66,7 +62,6 @@ async function _delete(id: number): Promise<void> {
 export default {
   getAll,
   addOne,
-  login,
   updateOne,
   delete: _delete,
 } as const;

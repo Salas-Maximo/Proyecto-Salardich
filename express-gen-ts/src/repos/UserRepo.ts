@@ -1,83 +1,145 @@
 import { IUser } from '@src/models/User';
 import { getRandomInt } from '@src/util/misc';
-import orm from './MockOrm';
-
+import { UserModel } from './Mongoose';
+import bcrypt from 'bcrypt';
+import EnvVars from '@src/common/EnvVars';
+import jwt from 'jsonwebtoken';
 
 // **** Functions **** //
 
 /**
  * Get one user.
  */
-async function getOne(email: string): Promise<IUser | null> {
-  const db = await orm.openDb();
-  for (const user of db.users) {
-    if (user.email === email) {
-      return user;
-    }
-  }
-  return null;
+async function getOne(id: number): Promise<IUser | null> {
+  return new Promise<IUser | null>((resolve, reject) => {
+    UserModel.findOne({ id: id }).then((user: any) => {
+      resolve(user);
+    })
+    .catch((err: any) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+    });
+  });
 }
 
 /**
  * See if a user with the given id exists.
  */
 async function persists(id: number): Promise<boolean> {
-  const db = await orm.openDb();
-  for (const user of db.users) {
-    if (user.id === id) {
-      return true;
-    }
-  }
-  return false;
+  return new Promise<boolean>((resolve, reject) => {
+    UserModel.findOne({ id: id }).then((user: any) => {
+      if(user){
+        resolve(true);
+      }else{
+        resolve(false);
+      }
+    })
+    .catch((err: any) => {
+      if (err) {
+        reject(err);
+      }
+    });
+  });
 }
 
 /**
  * Get all users.
  */
 async function getAll(): Promise<IUser[]> {
-  const db = await orm.openDb();
-  return db.users;
+  return new Promise<IUser[]>((resolve, reject) => {
+    UserModel.find({}).then((users: any) => {
+      resolve(users);
+    })
+    .catch((err: any) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+    });
+  });
 }
 
 /**
  * Add one user.
  */
 async function add(user: IUser): Promise<void> {
-  const db = await orm.openDb();
   user.id = getRandomInt();
-  db.users.push(user);
-  return orm.saveDb(db);
+  const saltRounds = 10; // Puedes ajustar el número de rondas según sea necesario
+  return new Promise<void>((resolve, reject) => {
+    bcrypt.genSalt(saltRounds, (err, salt) => {
+      if (err) reject(err);
+  
+      // Hashear la contraseña con el salt generado
+      bcrypt.hash(user.password, salt, (err, hash) => {
+        if (err) reject(err);
+        
+        // El hash resultante es lo que almacenas en tu base de datos
+        user.password = hash;
+      });
+    });
+    UserModel.create(user).then(() => resolve()).catch((err: any) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+    });
+  });
+}
+
+async function login(user: IUser): Promise<String> {
+  return new Promise((resolve, reject) => {
+    UserModel.findOne({ email: user.email }).then((userDB: any) => {
+      if(userDB){
+        bcrypt.compare(user.password, userDB.password, (err, result) => {
+          if (err) reject(err);
+          if (!result) reject("Contraseña incorrecta");
+          const payload = {
+            id: userDB.id,
+            username: userDB.username,
+            email: userDB.email
+          }
+          const accessToken = jwt.sign(payload, EnvVars.Jwt.Secret, { expiresIn: '1h' });
+          resolve(accessToken);
+        });
+      }else{
+        reject("Usario no encontrado");
+      }
+    })
+    .catch((err: any) => {
+      if (err) {
+        reject(err);
+      }
+    });
+  });
 }
 
 /**
  * Update a user.
  */
 async function update(user: IUser): Promise<void> {
-  const db = await orm.openDb();
-  for (let i = 0; i < db.users.length; i++) {
-    if (db.users[i].id === user.id) {
-      const dbUser = db.users[i];
-      db.users[i] = {
-        ...dbUser,
-        name: user.name,
-        email: user.email,
-      };
-      return orm.saveDb(db);
-    }
-  }
+  return new Promise<void>((resolve, reject) => {
+    UserModel.updateOne({ id: user.id }, user).then(() => resolve()).catch((err: any) => {
+      if (err) {
+        reject(err);
+      }
+      resolve();
+    });
+  });
 }
 
 /**
  * Delete one user.
  */
 async function delete_(id: number): Promise<void> {
-  const db = await orm.openDb();
-  for (let i = 0; i < db.users.length; i++) {
-    if (db.users[i].id === id) {
-      db.users.splice(i, 1);
-      return orm.saveDb(db);
-    }
-  }
+  return new Promise<void>((resolve, reject) => {
+    UserModel.deleteOne({ id: id }).then(() => resolve()).catch((err: any) => {
+      if (err) {
+        reject(err);
+      }
+      resolve();
+    })});
 }
 
 
@@ -88,6 +150,7 @@ export default {
   persists,
   getAll,
   add,
+  login,
   update,
   delete: delete_,
 } as const;
