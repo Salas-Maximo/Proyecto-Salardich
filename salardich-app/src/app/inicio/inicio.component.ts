@@ -1,33 +1,56 @@
-import { Component } from '@angular/core';
-import { NgForm } from '@angular/forms';
-import { AuthService } from '../auth.service'; // Importa el servicio
-import { FormsModule } from '@angular/forms'; // Importar FormsModule
-import { CommonModule } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
+import { SangucheService, Sanguche } from './inicio.service';
 
 @Component({
   selector: 'app-inicio',
-  standalone: true,
-  imports: [CommonModule,FormsModule],
   templateUrl: './inicio.component.html',
-  styleUrl: './inicio.component.css'
+  styleUrls: ['./inicio.component.css']
 })
-export class InicioComponent {
-  constructor(private authService: AuthService) { }
+export class InicioComponent implements OnInit {
+  sanguches: Sanguche[] = [];
+  newSanguche: Sanguche = {
+    id: 0,
+    nombre: '',
+    ingredientes: []
+  };
 
-  onSubmit(form: NgForm) {
-    if (form.valid) {
-      const { email, password } = form.value;
+  constructor(private sangucheService: SangucheService) {}
 
-      this.authService.login(email, password).subscribe(
-        response => {
-          console.log('Inicio de sesión exitoso:', response);
-          // Aquí puedes manejar la respuesta del backend, como redirigir al usuario
-        },
-        error => {
-          console.error('Error al iniciar sesión:', error);
-          // Aquí puedes manejar los errores, como mostrar un mensaje de error
-        }
-      );
-    }
+  ngOnInit(): void {
+    this.getSanguches();
+  }
+
+  getSanguches(): void {
+    this.sangucheService.getAllSanguches().subscribe(
+      (data) => {
+        this.sanguches = data;
+      },
+      (error) => {
+        console.error('Error fetching sanguches', error);
+      }
+    );
+  }
+
+  addSanguche(): void {
+    this.sangucheService.addSanguche(this.newSanguche).subscribe(
+      () => {
+        this.getSanguches(); // Actualizar la lista después de agregar
+        this.newSanguche = { id: 0, nombre: '', ingredientes: [] }; // Limpiar el formulario
+      },
+      (error) => {
+        console.error('Error adding sanguche', error);
+      }
+    );
+  }
+
+  deleteSanguche(id: number): void {
+    this.sangucheService.deleteSanguche(id).subscribe(
+      () => {
+        this.getSanguches(); // Actualizar la lista después de eliminar
+      },
+      (error) => {
+        console.error('Error deleting sanguche', error);
+      }
+    );
   }
 }
